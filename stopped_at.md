@@ -1,1 +1,1 @@
-https://sotrh.github.io/learn-wgpu/beginner/tutorial4-buffer/#the-vertex-buffer
+https://sotrh.github.io/learn-wgpu/beginner/tutorial4-buffer/#the-index-buffer
