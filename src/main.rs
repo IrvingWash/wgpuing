@@ -1,3 +1,3 @@
-fn main() {
-    wgpuing::run();
+fn main() -> Result<(), String> {
+    wgpuing::run()
 }
