@@ -5,6 +5,27 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+#[derive(Clone, Copy, Debug)]
+struct Vertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+
+const VERTICES: &[Vertex] = &[
+    Vertex {
+        position: [0., 0.5, 0.],
+        color: [1., 0., 0.],
+    },
+    Vertex {
+        position: [-0.5, -0.5, 0.],
+        color: [0., 1., 0.],
+    },
+    Vertex {
+        position: [0.5, -0.5, 0.],
+        color: [0., 0., 1.],
+    },
+];
+
 // Just a helper struct that holds everything we need
 struct State<'a> {
     surface: wgpu::Surface<'a>,
@@ -76,11 +97,12 @@ impl<'a> State<'a> {
         });
 
         // 4. Create render pipeline layout
-        let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("My pipeline layout"),
-            bind_group_layouts: &[],
-            push_constant_ranges: &[],
-        });
+        let render_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("My pipeline layout"),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
 
         // 5. Create render pipeline
         // Render pipeline describes what actions GPU must perform on data
@@ -188,7 +210,7 @@ impl<'a> State<'a> {
                         load: wgpu::LoadOp::Clear(self.clear_color),
                         store: wgpu::StoreOp::Store,
                     },
-                })
+                }),
             ],
         });
 
