@@ -83,8 +83,13 @@ impl<'a> State<'a> {
         &self.window
     }
 
-    fn resize(&mut self) {
-        todo!()
+    fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        if new_size.width > 0 && new_size.height > 0 {
+            self.window_size = new_size;
+            self.surface_config.width = new_size.width;
+            self.surface_config.height = new_size.height;
+            self.surface.configure(&self.device, &self.surface_config);
+        }
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
@@ -108,7 +113,7 @@ pub async fn run() -> Result<(), String> {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     // Creating our state
-    let state = State::new(&window).await;
+    let mut state = State::new(&window).await;
 
     // Running the event loop
     event_loop
@@ -127,6 +132,9 @@ pub async fn run() -> Result<(), String> {
                         },
                     ..
                 } => control_flow.exit(),
+                WindowEvent::Resized(physical_size) => {
+                    state.resize(*physical_size);
+                },
                 _ => {}
             },
             _ => {}
