@@ -1,3 +1,3 @@
 fn main() -> Result<(), String> {
-    wgpuing::run()
+    pollster::block_on(wgpuing::run())
 }
