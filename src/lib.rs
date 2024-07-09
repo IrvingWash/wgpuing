@@ -61,6 +61,7 @@ struct State<'a> {
     clear_color: wgpu::Color,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
+    vertices_count: u32,
 }
 
 impl<'a> State<'a> {
@@ -137,7 +138,7 @@ impl<'a> State<'a> {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -185,6 +186,7 @@ impl<'a> State<'a> {
             clear_color: wgpu::Color::BLACK,
             render_pipeline,
             vertex_buffer,
+            vertices_count: VERTICES.len() as u32,
         }
     }
 
@@ -250,7 +252,8 @@ impl<'a> State<'a> {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.draw(0..3, 0..1); // @builtin(vertex_index) passes these values to the shader
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        render_pass.draw(0..self.vertices_count, 0..1); // @builtin(vertex_index) passes these values to the shader
 
         // encoder was mutably borrowed when creating `render_pass`
         drop(render_pass);
