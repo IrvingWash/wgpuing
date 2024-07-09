@@ -13,6 +13,7 @@ struct State<'a> {
     surface_config: wgpu::SurfaceConfiguration,
     window_size: winit::dpi::PhysicalSize<u32>,
     window: &'a Window,
+    clear_color: wgpu::Color,
 }
 
 impl<'a> State<'a> {
@@ -76,6 +77,7 @@ impl<'a> State<'a> {
             queue,
             surface_config,
             window_size,
+            clear_color: wgpu::Color::BLACK,
         }
     }
 
@@ -93,7 +95,19 @@ impl<'a> State<'a> {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        false
+        match event {
+            WindowEvent::CursorMoved { position, .. } => {
+                self.clear_color = wgpu::Color {
+                    r: position.x as f64 / self.window_size.width as f64,
+                    g: position.y as f64 / self.window_size.height as f64,
+                    b: 1.,
+                    a: 1.
+                };
+
+                true
+            },
+            _ => false
+        }
     }
 
     fn update(&mut self) {}
@@ -119,12 +133,7 @@ impl<'a> State<'a> {
                 view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.1,
-                        g: 0.2,
-                        b: 0.3,
-                        a: 1.,
-                    }),
+                    load: wgpu::LoadOp::Clear(self.clear_color),
                     store: wgpu::StoreOp::Store,
                 },
             })],
