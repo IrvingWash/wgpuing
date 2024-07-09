@@ -1,6 +1,6 @@
 use winit::{
     event::{ElementState, Event, KeyEvent, WindowEvent},
-    event_loop::EventLoop,
+    event_loop::{ControlFlow, EventLoop},
     keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowBuilder},
 };
@@ -96,12 +96,48 @@ impl<'a> State<'a> {
         false
     }
 
-    fn update(&mut self) {
-        todo!()
-    }
+    fn update(&mut self) {}
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        todo!()
+        let texture = self.surface.get_current_texture()?;
+        let view = texture
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("My command encoder"),
+            });
+
+        let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("My render pass"),
+            depth_stencil_attachment: None,
+            occlusion_query_set: None,
+            timestamp_writes: None,
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: &view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.1,
+                        g: 0.2,
+                        b: 0.3,
+                        a: 1.,
+                    }),
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+        });
+
+        // encoder was mutably borrowed when creating `render_pass`
+        drop(render_pass);
+
+        self.queue.submit([encoder.finish()]);
+
+        texture.present();
+
+        Ok(())
     }
 }
 
@@ -121,24 +157,39 @@ pub async fn run() -> Result<(), String> {
             Event::WindowEvent {
                 window_id,
                 ref event,
-            } if window_id == state.window.id() => if !state.input(event) {
-                match event {
-                    WindowEvent::CloseRequested
-                    | WindowEvent::KeyboardInput {
-                        event:
-                            KeyEvent {
-                                state: ElementState::Pressed,
-                                physical_key: PhysicalKey::Code(KeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => control_flow.exit(),
-                    WindowEvent::Resized(physical_size) => {
-                        state.resize(*physical_size);
-                    },
-                    _ => {}
+            } if window_id == state.window.id() => {
+                if !state.input(event) {
+                    match event {
+                        WindowEvent::CloseRequested
+                        | WindowEvent::KeyboardInput {
+                            event:
+                                KeyEvent {
+                                    state: ElementState::Pressed,
+                                    physical_key: PhysicalKey::Code(KeyCode::Escape),
+                                    ..
+                                },
+                            ..
+                        } => control_flow.exit(),
+                        WindowEvent::Resized(physical_size) => {
+                            state.resize(*physical_size);
+                        }
+                        WindowEvent::RedrawRequested => {
+                            state.update();
+
+                            match state.render() {
+                                Ok(_) => {}
+                                Err(wgpu::SurfaceError::Lost) => state.resize(state.window_size),
+                                Err(wgpu::SurfaceError::OutOfMemory) => control_flow.exit(),
+                                Err(e) => eprintln!("{:#?}", e),
+                            }
+                        }
+                        _ => {}
+                    }
                 }
-            },
+            }
+            Event::AboutToWait => {
+                state.window.request_redraw();
+            }
             _ => {}
         })
         .map_err(|op| op.to_string())
