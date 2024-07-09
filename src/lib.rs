@@ -5,7 +5,10 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-#[derive(Clone, Copy, Debug)]
+use wgpu::util::DeviceExt;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
     position: [f32; 3],
     color: [f32; 3],
@@ -36,6 +39,7 @@ struct State<'a> {
     window: &'a Window,
     clear_color: wgpu::Color,
     render_pipeline: wgpu::RenderPipeline,
+    vertex_buffer: wgpu::Buffer,
 }
 
 impl<'a> State<'a> {
@@ -141,6 +145,14 @@ impl<'a> State<'a> {
             multiview: None,
         });
 
+        let vertex_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("My vertex buffer"),
+                contents: bytemuck::cast_slice(VERTICES),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
+
         State {
             window,
             surface,
@@ -150,6 +162,7 @@ impl<'a> State<'a> {
             window_size,
             clear_color: wgpu::Color::BLACK,
             render_pipeline,
+            vertex_buffer,
         }
     }
 
