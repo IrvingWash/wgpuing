@@ -93,7 +93,7 @@ impl<'a> State<'a> {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        todo!()
+        false
     }
 
     fn update(&mut self) {
@@ -121,21 +121,23 @@ pub async fn run() -> Result<(), String> {
             Event::WindowEvent {
                 window_id,
                 ref event,
-            } if window_id == state.window.id() => match event {
-                WindowEvent::CloseRequested
-                | WindowEvent::KeyboardInput {
-                    event:
-                        KeyEvent {
-                            state: ElementState::Pressed,
-                            physical_key: PhysicalKey::Code(KeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => control_flow.exit(),
-                WindowEvent::Resized(physical_size) => {
-                    state.resize(*physical_size);
-                },
-                _ => {}
+            } if window_id == state.window.id() => if !state.input(event) {
+                match event {
+                    WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
+                        event:
+                            KeyEvent {
+                                state: ElementState::Pressed,
+                                physical_key: PhysicalKey::Code(KeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    } => control_flow.exit(),
+                    WindowEvent::Resized(physical_size) => {
+                        state.resize(*physical_size);
+                    },
+                    _ => {}
+                }
             },
             _ => {}
         })
