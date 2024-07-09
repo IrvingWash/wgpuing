@@ -1,6 +1,6 @@
 use winit::{
     event::{ElementState, Event, KeyEvent, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::EventLoop,
     keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowBuilder},
 };
@@ -34,8 +34,6 @@ impl<'a> State<'a> {
             })
             .await
             .unwrap();
-
-        println!("{}", adapter.get_info().backend.to_str());
 
         // TODO: What is device and queue
         let (device, queue) = adapter
@@ -82,7 +80,7 @@ impl<'a> State<'a> {
     }
 
     fn window(&self) -> &Window {
-        &self.window
+        self.window
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -98,15 +96,15 @@ impl<'a> State<'a> {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 self.clear_color = wgpu::Color {
-                    r: position.x as f64 / self.window_size.width as f64,
-                    g: position.y as f64 / self.window_size.height as f64,
+                    r: position.x / self.window_size.width as f64,
+                    g: position.y / self.window_size.height as f64,
                     b: 1.,
-                    a: 1.
+                    a: 1.,
                 };
 
                 true
-            },
-            _ => false
+            }
+            _ => false,
         }
     }
 
